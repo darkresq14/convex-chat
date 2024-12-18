@@ -1,12 +1,13 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/components/useColorScheme';
+import { TouchableOpacity, useColorScheme } from 'react-native';
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { Ionicons } from '@expo/vector-icons';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -45,15 +46,45 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <ConvexProvider client={convex}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#EEA217',
+            },
+            headerTintColor: '#fff',
+          }}
+        >
+          <Stack.Screen
+            name="index"
+            options={{
+              headerTitle: 'My Chats',
+              headerRight: () => (
+                <Link href={'/(modal)/createGroup'} asChild>
+                  <TouchableOpacity>
+                    <Ionicons name="add" size={32} color="white" />
+                  </TouchableOpacity>
+                </Link>
+              ),
+            }}
+          />
+          <Stack.Screen
+            name="(modal)/createGroup"
+            options={{
+              headerTitle: 'Start a Chat',
+              presentation: 'modal',
+            }}
+          />
+          <Stack.Screen name="(chat)/[chatId]" options={{ headerTitle: 'Test' }} />
+        </Stack>
+      </ThemeProvider>
+    </ConvexProvider>
   );
 }
