@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useQuery } from 'convex/react';
+import { useAction, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,8 +13,10 @@ import DialogButton from 'react-native-dialog/lib/Button';
 const Index = () => {
   const [name, setName] = useState('');
   const [visible, setVisible] = useState(false);
+  const [greeting, setGreeting] = useState('');
 
   const groups = useQuery(api.groups.get) ?? [];
+  const greetingAction = useAction(api.greeting.getGreeting);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -29,6 +31,18 @@ const Index = () => {
     void loadUser();
   }, []);
 
+  useEffect(() => {
+    if (!name) {
+      return;
+    }
+    const loadGreeting = async () => {
+      const greeting = await greetingAction({ name });
+      setGreeting(greeting);
+    };
+
+    void loadGreeting();
+  }, [name]);
+
   const setUser = async () => {
     const r = (Math.random() + 1).toString(36).substring(7);
     const userName = `${name}#${r}`;
@@ -41,6 +55,8 @@ const Index = () => {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container}>
+        {greeting && <Text style={{ textAlign: 'center', margin: 10 }}>{greeting}</Text>}
+
         {groups.map((group) => (
           <Link
             href={{ pathname: '/(chat)/[chatId]', params: { chatId: group._id } }}
